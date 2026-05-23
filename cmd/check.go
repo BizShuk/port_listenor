@@ -34,6 +34,12 @@ var checkCmd = &cobra.Command{
 }
 
 func init() {
-	checkCmd.Flags().StringVarP(&checkPorts, "ports", "p", "", "comma-separated list of ports to check (e.g. 80,443,3000)")
+	checkCmd.Flags().StringVarP(
+		&checkPorts,
+		"ports",
+		"p",
+		"",
+		"comma-separated list of ports to check (e.g. 80,443,3000)",
+	)
 	RootCmd.AddCommand(checkCmd)
 }
