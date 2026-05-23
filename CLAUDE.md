@@ -6,14 +6,16 @@
 .
 ├── CLAUDE.md
 ├── README.md
-├── check.go            # 單次檢查指令定義與邏輯
-├── checker/
-│   └── checker.go      # 連接埠檢查核心實作與指標導出
+├── cmd/                # CLI commands (Cobra)
+├── config/             # Configuration loader with viper
+├── settings/           # Default settings embedded
+├── checker/            # Port checking core implementation
+├── svc/                # Service layer
+├── docs/               # Documentation
+├── plans/              # Implementation plans
 ├── go.mod
-├── main.go             # 程式進入點
-├── monitor.go          # 持續監控指令定義與邏輯
-├── root.go             # Cobra 根指令與配置初始化
-└── settings.json       # 預設配置文件
+├── main.go             # Program entry point
+└── settings.json       # Default settings (moved to settings/)
 ```
 
 ## 技術棧 (Tech Stack)
