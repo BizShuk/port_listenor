@@ -8,14 +8,11 @@
 ├── README.md
 ├── cmd/                # CLI commands (Cobra)
 ├── config/             # Configuration loader with viper
-├── settings/           # Default settings embedded
-├── checker/            # Port checking core implementation
-├── svc/                # Service layer
+├── svc/                # Service layer (core checker and dashboard logic)
 ├── docs/               # Documentation
 ├── plans/              # Implementation plans
 ├── go.mod
-├── main.go             # Program entry point
-└── settings.json       # Default settings (moved to settings/)
+└── main.go             # Program entry point
 ```
 
 ## 技術棧 (Tech Stack)
@@ -34,8 +31,8 @@
 
 | 業務領域 (Domain)                   | 套件/模組 (Package/Module) | 進入點 (Entry Point)      |
 | ----------------------------------- | -------------------------- | ------------------------- |
-| 埠口狀態檢查 (Port Status Check)    | `checker`                  | `CheckPortWithProcess()`  |
-| 指標與監控 (Metrics and Monitoring) | `checker`, `main`          | `monitorPortCmd` 執行邏輯 |
+| 埠口狀態檢查 (Port Status Check)    | `svc`                      | `CheckPortWithProcess()`  |
+| 指標與監控 (Metrics and Monitoring) | `svc`, `cmd`               | `monitorPortCmd` 執行邏輯 |
 
 ## 開發指南 (Development Guide)
 
