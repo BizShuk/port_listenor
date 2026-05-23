@@ -24,7 +24,8 @@ type MonitorConfig struct {
 }
 
 // RunMonitor 啟動持續監控循環與指標服務
-func RunMonitor(ctx context.Context, cfg *MonitorConfig, globalConfig *config.Settings) error {
+func RunMonitor(ctx context.Context, cfg *MonitorConfig) error {
+	globalConfig := config.Get()
 	if cfg.Interval != "" {
 		globalConfig.CheckInterval = cfg.Interval
 	}
