@@ -12,36 +12,35 @@ import (
 
 // CheckConfig 定義單次檢查的參數
 type CheckConfig struct {
-	PortsToCheck []PortEntry
+	PortsToCheck []config.PortEntry
 	TimeoutVal   string
 	Writer       io.Writer
 }
 
 // RunOneTimeCheck 執行單次檢查邏輯，印出表格結果
 func RunOneTimeCheck(cfg *CheckConfig, globalConfig *config.Settings) error {
-	svcConfig := ToSvcConfig(globalConfig)
 	ports := cfg.PortsToCheck
 	if len(ports) == 0 {
-		ports = svcConfig.Ports
+		ports = globalConfig.Ports
 	}
 	if len(ports) == 0 {
 		return fmt.Errorf("no ports specified to check. Use -c to specify a config file or --ports to specify ports directly")
 	}
 
-	timeoutVal := svcConfig.Timeout
+	timeoutVal := globalConfig.Timeout
 	if cfg.TimeoutVal != "" {
 		timeoutVal = cfg.TimeoutVal
 	}
 	timeout := ParseDuration(timeoutVal)
 
-	c := NewChecker(svcConfig)
+	c := NewChecker(globalConfig)
 	var results []PortStatus
 	var resultsLock sync.Mutex
 	var wg sync.WaitGroup
 
 	for _, entry := range ports {
 		wg.Add(1)
-		go func(e PortEntry) {
+		go func(e config.PortEntry) {
 			defer wg.Done()
 			status := c.CheckPortWithProcess(e, timeout)
 			resultsLock.Lock()

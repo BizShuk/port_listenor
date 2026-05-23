@@ -2,11 +2,9 @@ package svc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -23,39 +21,6 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
 
-// ToSvcConfig 轉換 config.Settings 為 svc.Config
-func ToSvcConfig(s *config.Settings) *Config {
-	if s == nil {
-		return nil
-	}
-	ports := make([]PortEntry, len(s.Ports))
-	for i, p := range s.Ports {
-		ports[i] = PortEntry{Port: p.Port, Name: p.Name}
-	}
-	return &Config{
-		CheckInterval: s.CheckInterval,
-		Timeout:       s.Timeout,
-		MetricsPort:   s.MetricsPort,
-		MimirEndpoint: s.MimirEndpoint,
-		LogLevel:      s.LogLevel,
-		Ports:         ports,
-	}
-}
-
-type Config struct {
-	CheckInterval string      `json:"check_interval"`
-	Timeout       string      `json:"timeout"`
-	MetricsPort   int         `json:"metrics_port"`
-	MimirEndpoint string      `json:"mimir_endpoint"`
-	LogLevel      string      `json:"log_level"`
-	Ports         []PortEntry `json:"ports"`
-}
-
-type PortEntry struct {
-	Port int    `json:"port"`
-	Name string `json:"name"`
-}
-
 type PortStatus struct {
 	Host          string
 	Port          int
@@ -69,7 +34,7 @@ type PortStatus struct {
 }
 
 type Checker struct {
-	Config           *Config
+	Config           *config.Settings
 	StatusLock       sync.RWMutex
 	LatestStatuses   []PortStatus
 	PortStatusGauge  *prometheus.GaugeVec
@@ -79,7 +44,7 @@ type Checker struct {
 	OtelProvider     *sdkmetric.MeterProvider
 }
 
-func NewChecker(cfg *Config) *Checker {
+func NewChecker(cfg *config.Settings) *Checker {
 	reg := prometheus.NewRegistry()
 
 	statusGauge := prometheus.NewGaugeVec(
@@ -117,18 +82,6 @@ func NewChecker(cfg *Config) *Checker {
 		PortInfoGauge:    infoGauge,
 		Registry:         reg,
 	}
-}
-
-func LoadConfig(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config: %w", err)
-	}
-	return &cfg, nil
 }
 
 func (c *Checker) InitOTel(ctx context.Context) error {
@@ -291,7 +244,7 @@ func getProcessInfo(port int) (pid string, processName string) {
 	return "", ""
 }
 
-func (c *Checker) CheckPortWithProcess(entry PortEntry, timeout time.Duration) PortStatus {
+func (c *Checker) CheckPortWithProcess(entry config.PortEntry, timeout time.Duration) PortStatus {
 	status := PortStatus{
 		Host:    "localhost",
 		Port:    entry.Port,

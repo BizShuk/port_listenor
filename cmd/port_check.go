@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bizshuk/port_listenor/config"
 	"github.com/bizshuk/port_listenor/svc"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,7 @@ var checkCmd = &cobra.Command{
 	Short: "Run a one-time port status check",
 	Long:  `Check defined ports once and print the results immediately to the console.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var portsToCheck []svc.PortEntry
+		var portsToCheck []config.PortEntry
 
 		if checkPorts != "" {
 			parts := strings.Split(checkPorts, ",")
@@ -30,7 +31,7 @@ var checkCmd = &cobra.Command{
 				if err != nil {
 					return fmt.Errorf("invalid port number: %s", pStr)
 				}
-				portsToCheck = append(portsToCheck, svc.PortEntry{
+				portsToCheck = append(portsToCheck, config.PortEntry{
 					Port: portNum,
 					Name: fmt.Sprintf("port-%d", portNum),
 				})

@@ -36,7 +36,7 @@ var monitorPortCmd = &cobra.Command{
 			cfg.MetricsPort = 0 // 代表使用設定檔的值
 		}
 
-		return svc.RunMonitor(ctx, cfg, svc.ToSvcConfig(GetGlobalConfig()))
+		return svc.RunMonitor(ctx, cfg, GetGlobalConfig())
 	},
 }
 

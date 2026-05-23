@@ -11,6 +11,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/bizshuk/port_listenor/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -23,7 +24,7 @@ type MonitorConfig struct {
 }
 
 // RunMonitor 啟動持續監控循環與指標服務
-func RunMonitor(ctx context.Context, cfg *MonitorConfig, globalConfig *Config) error {
+func RunMonitor(ctx context.Context, cfg *MonitorConfig, globalConfig *config.Settings) error {
 	if cfg.Interval != "" {
 		globalConfig.CheckInterval = cfg.Interval
 	}
@@ -79,7 +80,7 @@ func RunMonitor(ctx context.Context, cfg *MonitorConfig, globalConfig *Config) e
 
 		for _, entry := range globalConfig.Ports {
 			wg.Add(1)
-			go func(e PortEntry) {
+			go func(e config.PortEntry) {
 				defer wg.Done()
 				status := c.CheckPortWithProcess(e, timeout)
 				c.UpdateMetrics(status)
