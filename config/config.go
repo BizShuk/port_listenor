@@ -2,11 +2,36 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/bizshuk/gosdk/config"
+	sdkutils "github.com/bizshuk/gosdk/utils"
 	"github.com/bizshuk/port_listenor/svc"
 	"github.com/spf13/viper"
 )
+
+var defaultJson = `{
+  "check_interval": "30s",
+  "timeout": "5s",
+  "metrics_port": 10235,
+  "mimir_endpoint": "",
+  "log_level": "info",
+  "ports": [
+    { "port": 8080, "name": "web" },
+    { "port": 8081, "name": "api" },
+    { "port": 5432, "name": "postgres" },
+    { "port": 6379, "name": "redis" },
+    { "port": 6378, "name": "redis-cluster" },
+    { "port": 9090, "name": "prometheus" },
+    { "port": 9093, "name": "alertmanager" },
+    { "port": 3000, "name": "grafana" },
+    { "port": 3100, "name": "loki" },
+    { "port": 9009, "name": "mimir" },
+    { "port": 3200, "name": "tempo" },
+    { "port": 22, "name": "ssh" }
+  ]
+}`
 
 // 全域設定實例
 var globalSettings *Settings
@@ -39,6 +64,15 @@ func Get() *Settings {
 }
 
 func Default() error {
+	homeDir, _ := os.UserHomeDir()
+	configDir := filepath.Join(homeDir, "config", "port_listenor")
+	configFilePath := filepath.Join(configDir, "settings.json")
+
+	err := sdkutils.CreateIfNotExist(configFilePath, defaultJson)
+	if err != nil {
+		return err
+	}
+
 	setDefaultSettings()
 	config.DefaultWithDir("~/config/port_listenor")
 
