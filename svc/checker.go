@@ -44,7 +44,7 @@ type Checker struct {
 	OtelProvider     *sdkmetric.MeterProvider
 }
 
-func NewChecker(cfg *config.Settings) *Checker {
+func NewChecker() *Checker {
 	reg := prometheus.NewRegistry()
 
 	statusGauge := prometheus.NewGaugeVec(
@@ -76,7 +76,7 @@ func NewChecker(cfg *config.Settings) *Checker {
 	reg.MustRegister(infoGauge)
 
 	return &Checker{
-		Config:           cfg,
+		Config:           config.Get(),
 		PortStatusGauge:  statusGauge,
 		PortLatencyGauge: latencyGauge,
 		PortInfoGauge:    infoGauge,
@@ -85,10 +85,6 @@ func NewChecker(cfg *config.Settings) *Checker {
 }
 
 func (c *Checker) InitOTel(ctx context.Context) error {
-	if c.Config.MimirEndpoint == "" {
-		return nil
-	}
-
 	u, err := url.Parse(c.Config.MimirEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to parse mimir endpoint: %w", err)

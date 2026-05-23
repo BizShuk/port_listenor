@@ -29,6 +29,7 @@
 
 - [ ] `步驟 2：提交變更`
       執行：
+
     ```bash
     git add go.mod
     git commit -m "refactor: rename module to github.com/bizshuk/port_listenor"
@@ -52,25 +53,25 @@
     package svc
 
     import (
-    	"context"
-    	"encoding/json"
-    	"fmt"
-    	"net"
-    	"net/url"
-    	"os"
-    	"os/exec"
-    	"strings"
-    	"sync"
-    	"time"
+     "context"
+     "encoding/json"
+     "fmt"
+     "net"
+     "net/url"
+     "os"
+     "os/exec"
+     "strings"
+     "sync"
+     "time"
 
-    	"github.com/prometheus/client_golang/prometheus"
-    	"go.opentelemetry.io/otel"
-    	"go.opentelemetry.io/otel/attribute"
-    	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-    	"go.opentelemetry.io/otel/metric"
-    	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-    	"go.opentelemetry.io/otel/sdk/resource"
-    	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+     "github.com/prometheus/client_golang/prometheus"
+     "go.opentelemetry.io/otel"
+     "go.opentelemetry.io/otel/attribute"
+     "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+     "go.opentelemetry.io/otel/metric"
+     sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+     "go.opentelemetry.io/otel/sdk/resource"
+     semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
     )
     ```
 
@@ -78,6 +79,7 @@
 
 - [ ] `步驟 2：提交變更`
       執行：
+
     ```bash
     git add svc/checker.go
     git commit -m "refactor: move checker.go to svc package"
@@ -98,87 +100,88 @@
     package svc
 
     import (
-    	"fmt"
-    	"io"
-    	"os"
-    	"sort"
-    	"sync"
-    	"text/tabwriter"
+     "fmt"
+     "io"
+     "os"
+     "sort"
+     "sync"
+     "text/tabwriter"
     )
 
     // CheckConfig 定義單次檢查的參數
     type CheckConfig struct {
-    	PortsToCheck []PortEntry
-    	TimeoutVal   string
-    	Writer       io.Writer
+     PortsToCheck []PortEntry
+     TimeoutVal   string
+     Writer       io.Writer
     }
 
     // RunOneTimeCheck 執行單次檢查邏輯，印出表格結果
     func RunOneTimeCheck(cfg *CheckConfig, globalConfig *Config) error {
-    	ports := cfg.PortsToCheck
-    	if len(ports) == 0 {
-    		ports = globalConfig.Ports
-    	}
-    	if len(ports) == 0 {
-    		return fmt.Errorf("no ports specified to check. Use -c to specify a config file or --ports to specify ports directly")
-    	}
+     ports := cfg.PortsToCheck
+     if len(ports) == 0 {
+      ports = globalConfig.Ports
+     }
+     if len(ports) == 0 {
+      return fmt.Errorf("no ports specified to check. Use -c to specify a config file or --ports to specify ports directly")
+     }
 
-    	timeoutVal := globalConfig.Timeout
-    	if cfg.TimeoutVal != "" {
-    		timeoutVal = cfg.TimeoutVal
-    	}
-    	timeout := ParseDuration(timeoutVal)
+     timeoutVal := globalConfig.Timeout
+     if cfg.TimeoutVal != "" {
+      timeoutVal = cfg.TimeoutVal
+     }
+     timeout := ParseDuration(timeoutVal)
 
-    	c := NewChecker(globalConfig)
-    	var results []PortStatus
-    	var resultsLock sync.Mutex
-    	var wg sync.WaitGroup
+     c := NewChecker(globalConfig)
+     var results []PortStatus
+     var resultsLock sync.Mutex
+     var wg sync.WaitGroup
 
-    	for _, entry := range ports {
-    		wg.Add(1)
-    		go func(e PortEntry) {
-    			defer wg.Done()
-    			status := c.CheckPortWithProcess(e, timeout)
-    			resultsLock.Lock()
-    			results = append(results, status)
-    			resultsLock.Unlock()
-    		}(entry)
-    	}
-    	wg.Wait()
+     for _, entry := range ports {
+      wg.Add(1)
+      go func(e PortEntry) {
+       defer wg.Done()
+       status := c.CheckPortWithProcess(e, timeout)
+       resultsLock.Lock()
+       results = append(results, status)
+       resultsLock.Unlock()
+      }(entry)
+     }
+     wg.Wait()
 
-    	sort.Slice(results, func(i, j int) bool {
-    		return results[i].Port < results[j].Port
-    	})
+     sort.Slice(results, func(i, j int) bool {
+      return results[i].Port < results[j].Port
+     })
 
-    	w := tabwriter.NewWriter(cfg.Writer, 0, 0, 3, ' ', 0)
-    	fmt.Fprintln(w, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
-    	for _, s := range results {
-    		statusStr := "CLOSED"
-    		if s.IsOpen {
-    			statusStr = "OPEN"
-    		}
-    		latencyStr := "-"
-    		if s.IsOpen {
-    			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
-    		}
-    		pidStr := "-"
-    		if s.IsOpen && s.PID != "" {
-    			pidStr = s.PID
-    		}
-    		procStr := "-"
-    		if s.IsOpen && s.ProcessName != "" {
-    			procStr = s.ProcessName
-    		}
-    		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
-    			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
-    	}
-    	w.Flush()
-    	return nil
+     w := tabwriter.NewWriter(cfg.Writer, 0, 0, 3, ' ', 0)
+     fmt.Fprintln(w, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
+     for _, s := range results {
+      statusStr := "CLOSED"
+      if s.IsOpen {
+       statusStr = "OPEN"
+      }
+      latencyStr := "-"
+      if s.IsOpen {
+       latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
+      }
+      pidStr := "-"
+      if s.IsOpen && s.PID != "" {
+       pidStr = s.PID
+      }
+      procStr := "-"
+      if s.IsOpen && s.ProcessName != "" {
+       procStr = s.ProcessName
+      }
+      fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
+       s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
+     }
+     w.Flush()
+     return nil
     }
     ```
 
 - [ ] `步驟 2：提交變更`
       執行：
+
     ```bash
     git add svc/check.go
     git commit -m "feat: implement one-time check service logic"
@@ -199,158 +202,159 @@
     package svc
 
     import (
-    	"context"
-    	"fmt"
-    	"log"
-    	"net/http"
-    	"os"
-    	"sort"
-    	"sync"
-    	"text/tabwriter"
-    	"time"
+     "context"
+     "fmt"
+     "log"
+     "net/http"
+     "os"
+     "sort"
+     "sync"
+     "text/tabwriter"
+     "time"
 
-    	"github.com/prometheus/client_golang/prometheus/promhttp"
+     "github.com/prometheus/client_golang/prometheus/promhttp"
     )
 
     // MonitorConfig 定義持續監控的參數
     type MonitorConfig struct {
-    	Interval    string
-    	Timeout     string
-    	MetricsPort int
-    	MimirURL    string
+     Interval    string
+     Timeout     string
+     MetricsPort int
+     MimirURL    string
     }
 
     // RunMonitor 啟動持續監控循環與指標服務
     func RunMonitor(ctx context.Context, cfg *MonitorConfig, globalConfig *Config) error {
-    	if cfg.Interval != "" {
-    		globalConfig.CheckInterval = cfg.Interval
-    	}
-    	if cfg.Timeout != "" {
-    		globalConfig.Timeout = cfg.Timeout
-    	}
-    	if cfg.MetricsPort != 0 {
-    		globalConfig.MetricsPort = cfg.MetricsPort
-    	}
-    	if cfg.MimirURL != "" {
-    		globalConfig.MimirEndpoint = cfg.MimirURL
-    	}
+     if cfg.Interval != "" {
+      globalConfig.CheckInterval = cfg.Interval
+     }
+     if cfg.Timeout != "" {
+      globalConfig.Timeout = cfg.Timeout
+     }
+     if cfg.MetricsPort != 0 {
+      globalConfig.MetricsPort = cfg.MetricsPort
+     }
+     if cfg.MimirURL != "" {
+      globalConfig.MimirEndpoint = cfg.MimirURL
+     }
 
-    	c := NewChecker(globalConfig)
+     c := NewChecker(globalConfig)
 
-    	if globalConfig.MimirEndpoint != "" {
-    		if err := c.InitOTel(ctx); err != nil {
-    			log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
-    		} else {
-    			defer func() {
-    				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-    				defer shutdownCancel()
-    				if err := c.ShutdownOTel(shutdownCtx); err != nil {
-    					log.Printf("Error shutting down MeterProvider: %v", err)
-    				}
-    			}()
-    		}
-    	}
+     if globalConfig.MimirEndpoint != "" {
+      if err := c.InitOTel(ctx); err != nil {
+       log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
+      } else {
+       defer func() {
+        shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer shutdownCancel()
+        if err := c.ShutdownOTel(shutdownCtx); err != nil {
+         log.Printf("Error shutting down MeterProvider: %v", err)
+        }
+       }()
+      }
+     }
 
-    	go func() {
-    		http.Handle("/metrics", promhttp.HandlerFor(c.Registry, promhttp.HandlerOpts{}))
-    		addr := fmt.Sprintf(":%d", globalConfig.MetricsPort)
-    		log.Printf("Starting prometheus metrics server on %s", addr)
-    		if err := http.ListenAndServe(addr, nil); err != nil {
-    			log.Printf("Failed to start metrics server: %v", err)
-    		}
-    	}()
+     go func() {
+      http.Handle("/metrics", promhttp.HandlerFor(c.Registry, promhttp.HandlerOpts{}))
+      addr := fmt.Sprintf(":%d", globalConfig.MetricsPort)
+      log.Printf("Starting prometheus metrics server on %s", addr)
+      if err := http.ListenAndServe(addr, nil); err != nil {
+       log.Printf("Failed to start metrics server: %v", err)
+      }
+     }()
 
-    	timeout := ParseDuration(globalConfig.Timeout)
-    	interval := ParseDuration(globalConfig.CheckInterval)
-    	var wg sync.WaitGroup
+     timeout := ParseDuration(globalConfig.Timeout)
+     interval := ParseDuration(globalConfig.CheckInterval)
+     var wg sync.WaitGroup
 
-    	for {
-    		select {
-    		case <-ctx.Done():
-    			log.Println("Received shutdown signal, shutting down gracefully...")
-    			return nil
-    		default:
-    		}
+     for {
+      select {
+      case <-ctx.Done():
+       log.Println("Received shutdown signal, shutting down gracefully...")
+       return nil
+      default:
+      }
 
-    		var currentStatuses []PortStatus
-    		var currentLock sync.Mutex
+      var currentStatuses []PortStatus
+      var currentLock sync.Mutex
 
-    		for _, entry := range globalConfig.Ports {
-    			wg.Add(1)
-    			go func(e PortEntry) {
-    				defer wg.Done()
-    				status := c.CheckPortWithProcess(e, timeout)
-    				c.UpdateMetrics(status)
+      for _, entry := range globalConfig.Ports {
+       wg.Add(1)
+       go func(e PortEntry) {
+        defer wg.Done()
+        status := c.CheckPortWithProcess(e, timeout)
+        c.UpdateMetrics(status)
 
-    				currentLock.Lock()
-    				currentStatuses = append(currentStatuses, status)
-    				currentLock.Unlock()
-    			}(entry)
-    		}
+        currentLock.Lock()
+        currentStatuses = append(currentStatuses, status)
+        currentLock.Unlock()
+       }(entry)
+      }
 
-    		wg.Wait()
+      wg.Wait()
 
-    		sort.Slice(currentStatuses, func(i, j int) bool {
-    			return currentStatuses[i].Port < currentStatuses[j].Port
-    		})
+      sort.Slice(currentStatuses, func(i, j int) bool {
+       return currentStatuses[i].Port < currentStatuses[j].Port
+      })
 
-    		c.StatusLock.Lock()
-    		c.LatestStatuses = currentStatuses
-    		c.StatusLock.Unlock()
+      c.StatusLock.Lock()
+      c.LatestStatuses = currentStatuses
+      c.StatusLock.Unlock()
 
-    		RenderDashboard(currentStatuses, interval)
+      RenderDashboard(currentStatuses, interval)
 
-    		select {
-    		case <-time.After(interval):
-    		case <-ctx.Done():
-    			log.Println("Received shutdown signal, shutting down gracefully...")
-    			return nil
-    		}
-    	}
+      select {
+      case <-time.After(interval):
+      case <-ctx.Done():
+       log.Println("Received shutdown signal, shutting down gracefully...")
+       return nil
+      }
+     }
     }
 
     // RenderDashboard 渲染儀表板
     func RenderDashboard(statuses []PortStatus, interval time.Duration) {
-    	fmt.Print("\033[H\033[2J")
-    	fmt.Println("================================================================================")
-    	fmt.Printf(" PORT HEALTH CHECKER - Last Update: %s (Interval: %v)\n",
-    		time.Now().Format("2006-01-02 15:04:05"), interval)
-    	fmt.Println("================================================================================")
+     fmt.Print("\033[H\033[2J")
+     fmt.Println("================================================================================")
+     fmt.Printf(" PORT HEALTH CHECKER - Last Update: %s (Interval: %v)\n",
+      time.Now().Format("2006-01-02 15:04:05"), interval)
+     fmt.Println("================================================================================")
 
-    	w := tabwriter.NewWriter(os.Stdout, 0, 8, 3, ' ', 0)
-    	fmt.Fprintln(w, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
+     w := tabwriter.NewWriter(os.Stdout, 0, 8, 3, ' ', 0)
+     fmt.Fprintln(w, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
 
-    	for _, s := range statuses {
-    		statusStr := "\033[31mCLOSED\033[0m"
-    		if s.IsOpen {
-    			statusStr = "\033[32mOPEN\033[0m"
-    		}
+     for _, s := range statuses {
+      statusStr := "\033[31mCLOSED\033[0m"
+      if s.IsOpen {
+       statusStr = "\033[32mOPEN\033[0m"
+      }
 
-    		latencyStr := "-"
-    		if s.IsOpen {
-    			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
-    		}
+      latencyStr := "-"
+      if s.IsOpen {
+       latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
+      }
 
-    		pidStr := "-"
-    		if s.IsOpen && s.PID != "" {
-    			pidStr = s.PID
-    		}
+      pidStr := "-"
+      if s.IsOpen && s.PID != "" {
+       pidStr = s.PID
+      }
 
-    		procStr := "-"
-    		if s.IsOpen && s.ProcessName != "" {
-    			procStr = s.ProcessName
-    		}
+      procStr := "-"
+      if s.IsOpen && s.ProcessName != "" {
+       procStr = s.ProcessName
+      }
 
-    		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
-    			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
-    	}
-    	w.Flush()
-    	fmt.Println("================================================================================")
+      fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
+       s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
+     }
+     w.Flush()
+     fmt.Println("================================================================================")
     }
     ```
 
 - [ ] `步驟 2：提交變更`
       執行：
+
     ```bash
     git add svc/monitor.go
     git commit -m "feat: implement continuous monitoring service logic"
@@ -371,65 +375,66 @@
     package cmd
 
     import (
-    	"errors"
-    	"fmt"
-    	"os"
+     "errors"
+     "fmt"
+     "os"
 
-    	"github.com/spf13/cobra"
-    	"github.com/bizshuk/port_listenor/svc"
+     "github.com/spf13/cobra"
+     "github.com/bizshuk/port_listenor/svc"
     )
 
     var (
-    	cfgFile string
-    	config  svc.Config
+     cfgFile string
+     config  svc.Config
     )
 
     var RootCmd = &cobra.Command{
-    	Use:   "port-checker",
-    	Short: "Port Health Checker CLI",
-    	Long:  `A CLI tool to check the status of specific ports and export metrics.`,
+     Use:   "port-checker",
+     Short: "Port Health Checker CLI",
+     Long:  `A CLI tool to check the status of specific ports and export metrics.`,
     }
 
     func init() {
-    	cobra.OnInitialize(initConfig)
-    	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "settings.json", "config file path")
+     cobra.OnInitialize(initConfig)
+     RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "settings.json", "config file path")
     }
 
     func initConfig() {
-    	if cfgFile == "" {
-    		cfgFile = "settings.json"
-    	}
-    	cfg, err := svc.LoadConfig(cfgFile)
-    	if err != nil {
-    		if errors.Is(err, os.ErrNotExist) && cfgFile == "settings.json" {
-    			config = svc.Config{
-    				CheckInterval: "30s",
-    				Timeout:       "5s",
-    				MetricsPort:   10235,
-    			}
-    			return
-    		}
-    		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-    		os.Exit(1)
-    	}
-    	config = *cfg
+     if cfgFile == "" {
+      cfgFile = "settings.json"
+     }
+     cfg, err := svc.LoadConfig(cfgFile)
+     if err != nil {
+      if errors.Is(err, os.ErrNotExist) && cfgFile == "settings.json" {
+       config = svc.Config{
+        CheckInterval: "30s",
+        Timeout:       "5s",
+        MetricsPort:   10235,
+       }
+       return
+      }
+      fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+      os.Exit(1)
+     }
+     config = *cfg
     }
 
     func Execute() {
-    	if err := RootCmd.Execute(); err != nil {
-    		fmt.Println(err)
-    		os.Exit(1)
-    	}
+     if err := RootCmd.Execute(); err != nil {
+      fmt.Println(err)
+      os.Exit(1)
+     }
     }
 
     // GetGlobalConfig 提供給同套件的其他 command 檔案獲取全域設定
     func GetGlobalConfig() *svc.Config {
-    	return &config
+     return &config
     }
     ```
 
 - [ ] `步驟 2：提交變更`
       執行：
+
     ```bash
     git add cmd/root.go
     git commit -m "feat: add cmd/root.go"
@@ -451,17 +456,17 @@
     package cmd
 
     import (
-    	"github.com/spf13/cobra"
+     "github.com/spf13/cobra"
     )
 
     var portCmd = &cobra.Command{
-    	Use:   "port",
-    	Short: "Port operations",
-    	Long:  `Subcommands for checking specific ports.`,
+     Use:   "port",
+     Short: "Port operations",
+     Long:  `Subcommands for checking specific ports.`,
     }
 
     func init() {
-    	RootCmd.AddCommand(portCmd)
+     RootCmd.AddCommand(portCmd)
     }
     ```
 
@@ -472,61 +477,62 @@
     package cmd
 
     import (
-    	"fmt"
-    	"os"
-    	"strconv"
-    	"strings"
+     "fmt"
+     "os"
+     "strconv"
+     "strings"
 
-    	"github.com/spf13/cobra"
-    	"github.com/bizshuk/port_listenor/svc"
+     "github.com/spf13/cobra"
+     "github.com/bizshuk/port_listenor/svc"
     )
 
     var (
-    	checkPorts   string
-    	checkTimeout string
+     checkPorts   string
+     checkTimeout string
     )
 
     var checkCmd = &cobra.Command{
-    	Use:   "check",
-    	Short: "Run a one-time port status check",
-    	Long:  `Check defined ports once and print the results immediately to the console.`,
-    	RunE: func(cmd *cobra.Command, args []string) error {
-    		var portsToCheck []svc.PortEntry
+     Use:   "check",
+     Short: "Run a one-time port status check",
+     Long:  `Check defined ports once and print the results immediately to the console.`,
+     RunE: func(cmd *cobra.Command, args []string) error {
+      var portsToCheck []svc.PortEntry
 
-    		if checkPorts != "" {
-    			parts := strings.Split(checkPorts, ",")
-    			for _, pStr := range parts {
-    				pStr = strings.TrimSpace(pStr)
-    				portNum, err := strconv.Atoi(pStr)
-    				if err != nil {
-    					return fmt.Errorf("invalid port number: %s", pStr)
-    				}
-    				portsToCheck = append(portsToCheck, svc.PortEntry{
-    					Port: portNum,
-    					Name: fmt.Sprintf("port-%d", portNum),
-    				})
-    			}
-    		}
+      if checkPorts != "" {
+       parts := strings.Split(checkPorts, ",")
+       for _, pStr := range parts {
+        pStr = strings.TrimSpace(pStr)
+        portNum, err := strconv.Atoi(pStr)
+        if err != nil {
+         return fmt.Errorf("invalid port number: %s", pStr)
+        }
+        portsToCheck = append(portsToCheck, svc.PortEntry{
+         Port: portNum,
+         Name: fmt.Sprintf("port-%d", portNum),
+        })
+       }
+      }
 
-    		cfg := &svc.CheckConfig{
-    			PortsToCheck: portsToCheck,
-    			TimeoutVal:   checkTimeout,
-    			Writer:       os.Stdout,
-    		}
+      cfg := &svc.CheckConfig{
+       PortsToCheck: portsToCheck,
+       TimeoutVal:   checkTimeout,
+       Writer:       os.Stdout,
+      }
 
-    		return svc.RunOneTimeCheck(cfg, GetGlobalConfig())
-    	},
+      return svc.RunOneTimeCheck(cfg, GetGlobalConfig())
+     },
     }
 
     func init() {
-    	checkCmd.Flags().StringVarP(&checkPorts, "ports", "p", "", "comma-separated list of ports to check (e.g. 80,443,3000)")
-    	checkCmd.Flags().StringVar(&checkTimeout, "timeout", "", "connection timeout (e.g. 2s, 5s)")
-    	portCmd.AddCommand(checkCmd)
+     checkCmd.Flags().StringVarP(&checkPorts, "ports", "p", "", "comma-separated list of ports to check (e.g. 80,443,3000)")
+     checkCmd.Flags().StringVar(&checkTimeout, "timeout", "", "connection timeout (e.g. 2s, 5s)")
+     portCmd.AddCommand(checkCmd)
     }
     ```
 
 - [ ] `步驟 3：提交變更`
       執行：
+
     ```bash
     git add cmd/port.go cmd/port_check.go
     git commit -m "feat: add cmd/port.go and cmd/port_check.go"
@@ -548,17 +554,17 @@
     package cmd
 
     import (
-    	"github.com/spf13/cobra"
+     "github.com/spf13/cobra"
     )
 
     var monitorCmd = &cobra.Command{
-    	Use:   "monitor",
-    	Short: "Continuous monitoring operations",
-    	Long:  `Subcommands for continuous port monitoring and metrics exporting.`,
+     Use:   "monitor",
+     Short: "Continuous monitoring operations",
+     Long:  `Subcommands for continuous port monitoring and metrics exporting.`,
     }
 
     func init() {
-    	RootCmd.AddCommand(monitorCmd)
+     RootCmd.AddCommand(monitorCmd)
     }
     ```
 
@@ -569,56 +575,57 @@
     package cmd
 
     import (
-    	"context"
-    	"os"
-    	"os/signal"
-    	"syscall"
+     "context"
+     "os"
+     "os/signal"
+     "syscall"
 
-    	"github.com/spf13/cobra"
-    	"github.com/bizshuk/port_listenor/svc"
+     "github.com/spf13/cobra"
+     "github.com/bizshuk/port_listenor/svc"
     )
 
     var (
-    	monitorInterval string
-    	monitorTimeout  string
-    	metricsPort     int
-    	mimirEndpoint   string
+     monitorInterval string
+     monitorTimeout  string
+     metricsPort     int
+     mimirEndpoint   string
     )
 
     var monitorPortCmd = &cobra.Command{
-    	Use:   "port",
-    	Short: "Start continuous port health monitoring",
-    	Long:  `Run in daemon mode to check port status periodically and expose metrics.`,
-    	RunE: func(cmd *cobra.Command, args []string) error {
-    		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-    		defer cancel()
+     Use:   "port",
+     Short: "Start continuous port health monitoring",
+     Long:  `Run in daemon mode to check port status periodically and expose metrics.`,
+     RunE: func(cmd *cobra.Command, args []string) error {
+      ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+      defer cancel()
 
-    		cfg := &svc.MonitorConfig{
-    			Interval:    monitorInterval,
-    			Timeout:     monitorTimeout,
-    			MetricsPort: metricsPort,
-    			MimirURL:    mimirEndpoint,
-    		}
+      cfg := &svc.MonitorConfig{
+       Interval:    monitorInterval,
+       Timeout:     monitorTimeout,
+       MetricsPort: metricsPort,
+       MimirURL:    mimirEndpoint,
+      }
 
-    		if !cmd.Flags().Changed("metrics-port") {
-    			cfg.MetricsPort = 0 // 代表使用設定檔的值
-    		}
+      if !cmd.Flags().Changed("metrics-port") {
+       cfg.MetricsPort = 0 // 代表使用設定檔的值
+      }
 
-    		return svc.RunMonitor(ctx, cfg, GetGlobalConfig())
-    	},
+      return svc.RunMonitor(ctx, cfg, GetGlobalConfig())
+     },
     }
 
     func init() {
-    	monitorPortCmd.Flags().StringVar(&monitorInterval, "interval", "", "check interval (e.g. 10s, 1m)")
-    	monitorPortCmd.Flags().StringVar(&monitorTimeout, "timeout", "", "connection timeout (e.g. 2s, 5s)")
-    	monitorPortCmd.Flags().IntVar(&metricsPort, "metrics-port", 0, "prometheus metrics port")
-    	monitorPortCmd.Flags().StringVar(&mimirEndpoint, "mimir-endpoint", "", "OTLP mimir endpoint URL")
-    	monitorCmd.AddCommand(monitorPortCmd)
+     monitorPortCmd.Flags().StringVar(&monitorInterval, "interval", "", "check interval (e.g. 10s, 1m)")
+     monitorPortCmd.Flags().StringVar(&monitorTimeout, "timeout", "", "connection timeout (e.g. 2s, 5s)")
+     monitorPortCmd.Flags().IntVar(&metricsPort, "metrics-port", 0, "prometheus metrics port")
+     monitorPortCmd.Flags().StringVar(&mimirEndpoint, "mimir-endpoint", "", "OTLP mimir endpoint URL")
+     monitorCmd.AddCommand(monitorPortCmd)
     }
     ```
 
 - [ ] `步驟 3：提交變更`
       執行：
+
     ```bash
     git add cmd/monitor.go cmd/monitor_port.go
     git commit -m "feat: add cmd/monitor.go and cmd/monitor_port.go"
@@ -641,12 +648,13 @@
     import "github.com/bizshuk/port_listenor/cmd"
 
     func main() {
-    	cmd.Execute()
+     cmd.Execute()
     }
     ```
 
 - [ ] `步驟 2：提交變更`
       執行：
+
     ```bash
     git add main.go
     git commit -m "refactor: update main.go to use new cmd package"
@@ -679,6 +687,7 @@
 
 - [ ] `步驟 3：提交變更`
       執行：
+
     ```bash
     git rm root.go check.go monitor.go
     git rm -r checker
@@ -729,6 +738,7 @@
 
 - [ ] `步驟 5：提交最終變更`
       執行：
+
     ```bash
     git add .
     git commit -m "refactor: finalize refactoring and tidy up go mod"

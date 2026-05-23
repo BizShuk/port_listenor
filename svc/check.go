@@ -2,7 +2,7 @@ package svc
 
 import (
 	"fmt"
-	"io"
+	"os"
 	"sort"
 	"sync"
 	"text/tabwriter"
@@ -10,31 +10,17 @@ import (
 	"github.com/bizshuk/port_listenor/config"
 )
 
-// CheckConfig 定義單次檢查的參數
-type CheckConfig struct {
-	PortsToCheck []config.PortEntry
-	TimeoutVal   string
-	Writer       io.Writer
-}
-
 // RunOneTimeCheck 執行單次檢查邏輯，印出表格結果
-func RunOneTimeCheck(cfg *CheckConfig) error {
+func RunOneTimeCheck() error {
 	globalConfig := config.Get()
-	ports := cfg.PortsToCheck
+	ports := globalConfig.Ports
 	if len(ports) == 0 {
-		ports = globalConfig.Ports
-	}
-	if len(ports) == 0 {
-		return fmt.Errorf("no ports specified to check. Use -c to specify a config file or --ports to specify ports directly")
+		return fmt.Errorf("no ports specified in config")
 	}
 
-	timeoutVal := globalConfig.Timeout
-	if cfg.TimeoutVal != "" {
-		timeoutVal = cfg.TimeoutVal
-	}
-	timeout := ParseDuration(timeoutVal)
+	timeout := ParseDuration(globalConfig.Timeout)
 
-	c := NewChecker(globalConfig)
+	c := NewChecker()
 	var results []PortStatus
 	var resultsLock sync.Mutex
 	var wg sync.WaitGroup
@@ -55,8 +41,8 @@ func RunOneTimeCheck(cfg *CheckConfig) error {
 		return results[i].Port < results[j].Port
 	})
 
-	w := tabwriter.NewWriter(cfg.Writer, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(tw, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
 	for _, s := range results {
 		statusStr := "CLOSED"
 		if s.IsOpen {
@@ -74,9 +60,67 @@ func RunOneTimeCheck(cfg *CheckConfig) error {
 		if s.IsOpen && s.ProcessName != "" {
 			procStr = s.ProcessName
 		}
-		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\n",
 			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
 	}
-	w.Flush()
+	tw.Flush()
 	return nil
+}
+
+// RunOneTimeCheckWithPorts 執行單次檢查，只檢查指定的連接埠
+func RunOneTimeCheckWithPorts(ports []int) error {
+	globalConfig := config.Get()
+	timeout := ParseDuration(globalConfig.Timeout)
+
+	c := NewChecker()
+	var results []PortStatus
+	var resultsLock sync.Mutex
+	var wg sync.WaitGroup
+
+	for _, port := range ports {
+		wg.Add(1)
+		go func(p int) {
+			defer wg.Done()
+			entry := config.PortEntry{Port: p, Name: fmt.Sprintf("port-%d", p)}
+			status := c.CheckPortWithProcess(entry, timeout)
+			resultsLock.Lock()
+			results = append(results, status)
+			resultsLock.Unlock()
+		}(port)
+	}
+	wg.Wait()
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Port < results[j].Port
+	})
+
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(tw, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
+	for _, s := range results {
+		statusStr := "CLOSED"
+		if s.IsOpen {
+			statusStr = "OPEN"
+		}
+		latencyStr := "-"
+		if s.IsOpen {
+			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
+		}
+		pidStr := "-"
+		if s.IsOpen && s.PID != "" {
+			pidStr = s.PID
+		}
+		procStr := "-"
+		if s.IsOpen && s.ProcessName != "" {
+			procStr = s.ProcessName
+		}
+		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\n",
+			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
+	}
+	tw.Flush()
+	return nil
+}
+
+// RunOneTimeCheckSimple 執行單次檢查，使用標準輸出
+func RunOneTimeCheckSimple() error {
+	return RunOneTimeCheck()
 }

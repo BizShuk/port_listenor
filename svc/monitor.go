@@ -15,31 +15,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// MonitorConfig 定義持續監控的參數
-type MonitorConfig struct {
-	Interval    string
-	Timeout     string
-	MetricsPort int
-	MimirURL    string
-}
-
 // RunMonitor 啟動持續監控循環與指標服務
-func RunMonitor(ctx context.Context, cfg *MonitorConfig) error {
+func RunMonitor(ctx context.Context) error {
 	globalConfig := config.Get()
-	if cfg.Interval != "" {
-		globalConfig.CheckInterval = cfg.Interval
-	}
-	if cfg.Timeout != "" {
-		globalConfig.Timeout = cfg.Timeout
-	}
-	if cfg.MetricsPort != 0 {
-		globalConfig.MetricsPort = cfg.MetricsPort
-	}
-	if cfg.MimirURL != "" {
-		globalConfig.MimirEndpoint = cfg.MimirURL
-	}
-
-	c := NewChecker(globalConfig)
+	c := NewChecker()
 
 	if globalConfig.MimirEndpoint != "" {
 		if err := c.InitOTel(ctx); err != nil {

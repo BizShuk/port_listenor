@@ -30,6 +30,8 @@ var defaultJson = `{
   ]
 }`
 
+const SETTINGS_PATH = "~/.config/port_listenor/settings.json"
+
 // 全域設定實例
 var globalSettings *Settings
 
@@ -61,13 +63,13 @@ func Get() *Settings {
 }
 
 func Default() error {
-	err := sdkutils.CreateIfNotExist("~/.config/port_listenor", defaultJson)
+	err := sdkutils.CreateIfNotExist(SETTINGS_PATH, defaultJson)
 	if err != nil {
 		return err
 	}
 
 	setDefaultSettings()
-	config.DefaultWithDir("~/.config/port_listenor")
+	config.DefaultWithDir(SETTINGS_PATH)
 
 	// 將 viper 內容解碼到 Settings 結構
 	globalSettings = &Settings{}
@@ -104,5 +106,3 @@ func setDefaultSettings() {
 func Reset() {
 	globalSettings = nil
 }
-
-
