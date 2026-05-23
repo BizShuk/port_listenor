@@ -1,0 +1,10 @@
+# Binaries
+port-checker
+port-checker.exe
+__debug_bin*
+*.out
+*.test
+
+# OS files
+.DS_Store
+Thumbs.db
