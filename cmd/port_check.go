@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/bizshuk/port_listenor/svc"
+	"github.com/spf13/cobra"
 )
 
 var (

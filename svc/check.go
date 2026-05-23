@@ -6,6 +6,8 @@ import (
 	"sort"
 	"sync"
 	"text/tabwriter"
+
+	"github.com/bizshuk/port_listenor/config"
 )
 
 // CheckConfig 定義單次檢查的參數
@@ -16,22 +18,23 @@ type CheckConfig struct {
 }
 
 // RunOneTimeCheck 執行單次檢查邏輯，印出表格結果
-func RunOneTimeCheck(cfg *CheckConfig, globalConfig *Config) error {
+func RunOneTimeCheck(cfg *CheckConfig, globalConfig *config.Settings) error {
+	svcConfig := ToSvcConfig(globalConfig)
 	ports := cfg.PortsToCheck
 	if len(ports) == 0 {
-		ports = globalConfig.Ports
+		ports = svcConfig.Ports
 	}
 	if len(ports) == 0 {
 		return fmt.Errorf("no ports specified to check. Use -c to specify a config file or --ports to specify ports directly")
 	}
 
-	timeoutVal := globalConfig.Timeout
+	timeoutVal := svcConfig.Timeout
 	if cfg.TimeoutVal != "" {
 		timeoutVal = cfg.TimeoutVal
 	}
 	timeout := ParseDuration(timeoutVal)
 
-	c := NewChecker(globalConfig)
+	c := NewChecker(svcConfig)
 	var results []PortStatus
 	var resultsLock sync.Mutex
 	var wg sync.WaitGroup

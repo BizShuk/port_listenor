@@ -2,12 +2,9 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/bizshuk/gosdk/config"
 	sdkutils "github.com/bizshuk/gosdk/utils"
-	"github.com/bizshuk/port_listenor/svc"
 	"github.com/spf13/viper"
 )
 
@@ -64,17 +61,13 @@ func Get() *Settings {
 }
 
 func Default() error {
-	homeDir, _ := os.UserHomeDir()
-	configDir := filepath.Join(homeDir, "config", "port_listenor")
-	configFilePath := filepath.Join(configDir, "settings.json")
-
-	err := sdkutils.CreateIfNotExist(configFilePath, defaultJson)
+	err := sdkutils.CreateIfNotExist("~/.config/port_listenor", defaultJson)
 	if err != nil {
 		return err
 	}
 
 	setDefaultSettings()
-	config.DefaultWithDir("~/config/port_listenor")
+	config.DefaultWithDir("~/.config/port_listenor")
 
 	// 將 viper 內容解碼到 Settings 結構
 	globalSettings = &Settings{}
@@ -107,29 +100,9 @@ func setDefaultSettings() {
 	})
 }
 
-// GetViper 返回 viper 實例，允許直接存取
-func GetViper() *viper.Viper {
-	return viper.GetViper()
-}
-
 // Reset 清除全域設定（主要用於測試）
 func Reset() {
 	globalSettings = nil
 }
 
-// ToSvcConfig 轉換為 svc.Config 格式
-// 用於與 svc 套件保持相容
-func (s *Settings) ToSvcConfig() *svc.Config {
-	ports := make([]svc.PortEntry, len(s.Ports))
-	for i, p := range s.Ports {
-		ports[i] = svc.PortEntry{Port: p.Port, Name: p.Name}
-	}
-	return &svc.Config{
-		CheckInterval: s.CheckInterval,
-		Timeout:       s.Timeout,
-		MetricsPort:   s.MetricsPort,
-		MimirEndpoint: s.MimirEndpoint,
-		LogLevel:      s.LogLevel,
-		Ports:         ports,
-	}
-}
+

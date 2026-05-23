@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bizshuk/port_listenor/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -21,6 +22,25 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
+
+// ToSvcConfig 轉換 config.Settings 為 svc.Config
+func ToSvcConfig(s *config.Settings) *Config {
+	if s == nil {
+		return nil
+	}
+	ports := make([]PortEntry, len(s.Ports))
+	for i, p := range s.Ports {
+		ports[i] = PortEntry{Port: p.Port, Name: p.Name}
+	}
+	return &Config{
+		CheckInterval: s.CheckInterval,
+		Timeout:       s.Timeout,
+		MetricsPort:   s.MetricsPort,
+		MimirEndpoint: s.MimirEndpoint,
+		LogLevel:      s.LogLevel,
+		Ports:         ports,
+	}
+}
 
 type Config struct {
 	CheckInterval string      `json:"check_interval"`

@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/spf13/cobra"
 	"github.com/bizshuk/port_listenor/svc"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -36,7 +36,7 @@ var monitorPortCmd = &cobra.Command{
 			cfg.MetricsPort = 0 // 代表使用設定檔的值
 		}
 
-		return svc.RunMonitor(ctx, cfg, GetGlobalConfig())
+		return svc.RunMonitor(ctx, cfg, svc.ToSvcConfig(GetGlobalConfig()))
 	},
 }
 
