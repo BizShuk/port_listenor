@@ -18,7 +18,8 @@ type CheckConfig struct {
 }
 
 // RunOneTimeCheck 執行單次檢查邏輯，印出表格結果
-func RunOneTimeCheck(cfg *CheckConfig, globalConfig *config.Settings) error {
+func RunOneTimeCheck(cfg *CheckConfig) error {
+	globalConfig := config.Get()
 	ports := cfg.PortsToCheck
 	if len(ports) == 0 {
 		ports = globalConfig.Ports

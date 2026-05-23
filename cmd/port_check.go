@@ -44,7 +44,7 @@ var checkCmd = &cobra.Command{
 			Writer:       os.Stdout,
 		}
 
-		return svc.RunOneTimeCheck(cfg, GetGlobalConfig())
+		return svc.RunOneTimeCheck(cfg)
 	},
 }
 
