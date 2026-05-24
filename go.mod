@@ -3,7 +3,7 @@ module github.com/bizshuk/port_listenor
 go 1.26.0
 
 require (
-	github.com/bizshuk/gosdk v1.0.1
+	github.com/bizshuk/gosdk v1.0.2-0.20260523184820-60620553d116
 	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0

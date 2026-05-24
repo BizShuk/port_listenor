@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bizshuk/gosdk/config"
+	"github.com/bizshuk/gosdk/log"
 	sdkutils "github.com/bizshuk/gosdk/utils"
 	"github.com/spf13/viper"
 )
@@ -30,7 +31,7 @@ var defaultJson = `{
   ]
 }`
 
-const SETTINGS_PATH = "~/.config/port_listenor/settings.json"
+const SETTINGS_PATH = "~/.config/port_listenor"
 
 // 全域設定實例
 var globalSettings *Settings
@@ -54,11 +55,14 @@ type PortEntry struct {
 // Get 返回全域設定單例
 // 首次調用時自動初始化
 func Get() *Settings {
+	log.Info("1")
 	if globalSettings == nil {
+		log.Info("2")
 		if err := Default(); err != nil {
 			panic(fmt.Sprintf("failed to load config: %v", err))
 		}
 	}
+	log.Info("3", globalSettings)
 	return globalSettings
 }
 
@@ -67,7 +71,7 @@ func Default() error {
 	if err != nil {
 		return err
 	}
-
+	log.Info("4")
 	config.DefaultWithDir(SETTINGS_PATH)
 
 	// 將 viper 內容解碼到 Settings 結構
@@ -75,6 +79,5 @@ func Default() error {
 	if err := viper.Unmarshal(globalSettings); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-
 	return nil
 }
