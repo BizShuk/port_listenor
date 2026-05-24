@@ -10,6 +10,30 @@ import (
 	"github.com/bizshuk/port_listenor/config"
 )
 
+// RenderCheckResult renders check results to the given writer with color output
+func RenderCheckResult(w *tabwriter.Writer, statuses []PortStatus) {
+	for _, s := range statuses {
+		statusStr := "\033[31mCLOSED\033[0m"
+		if s.IsOpen {
+			statusStr = "\033[32mOPEN\033[0m"
+		}
+		latencyStr := "-"
+		if s.IsOpen {
+			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
+		}
+		pidStr := "-"
+		if s.IsOpen && s.PID != "" {
+			pidStr = s.PID
+		}
+		procStr := "-"
+		if s.IsOpen && s.ProcessName != "" {
+			procStr = s.ProcessName
+		}
+		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
+			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
+	}
+}
+
 // RunOneTimeCheck 執行單次檢查邏輯，印出表格結果
 func RunOneTimeCheck() error {
 	globalConfig := config.Get()
@@ -43,26 +67,7 @@ func RunOneTimeCheck() error {
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(tw, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
-	for _, s := range results {
-		statusStr := "CLOSED"
-		if s.IsOpen {
-			statusStr = "OPEN"
-		}
-		latencyStr := "-"
-		if s.IsOpen {
-			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
-		}
-		pidStr := "-"
-		if s.IsOpen && s.PID != "" {
-			pidStr = s.PID
-		}
-		procStr := "-"
-		if s.IsOpen && s.ProcessName != "" {
-			procStr = s.ProcessName
-		}
-		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\n",
-			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
-	}
+	RenderCheckResult(tw, results)
 	tw.Flush()
 	return nil
 }
@@ -81,7 +86,7 @@ func RunOneTimeCheckWithPorts(ports []int) error {
 		wg.Add(1)
 		go func(p int) {
 			defer wg.Done()
-			entry := config.PortEntry{Port: p, Name: fmt.Sprintf("port-%d", p)}
+			entry := config.PortEntry{Port: port, Name: fmt.Sprintf("port-%d", port)}
 			status := c.CheckPortWithProcess(entry, timeout)
 			resultsLock.Lock()
 			results = append(results, status)
@@ -96,26 +101,7 @@ func RunOneTimeCheckWithPorts(ports []int) error {
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(tw, "PORT\tSERVICE\tSTATUS\tLATENCY\tPID\tPROCESS NAME")
-	for _, s := range results {
-		statusStr := "CLOSED"
-		if s.IsOpen {
-			statusStr = "OPEN"
-		}
-		latencyStr := "-"
-		if s.IsOpen {
-			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
-		}
-		pidStr := "-"
-		if s.IsOpen && s.PID != "" {
-			pidStr = s.PID
-		}
-		procStr := "-"
-		if s.IsOpen && s.ProcessName != "" {
-			procStr = s.ProcessName
-		}
-		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\n",
-			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
-	}
+	RenderCheckResult(tw, results)
 	tw.Flush()
 	return nil
 }
