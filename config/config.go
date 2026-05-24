@@ -68,7 +68,6 @@ func Default() error {
 		return err
 	}
 
-	setDefaultSettings()
 	config.DefaultWithDir(SETTINGS_PATH)
 
 	// 將 viper 內容解碼到 Settings 結構
@@ -78,31 +77,4 @@ func Default() error {
 	}
 
 	return nil
-}
-
-// setDefaultSettings 設定預設值
-func setDefaultSettings() {
-	viper.SetDefault("check_interval", "30s")
-	viper.SetDefault("timeout", "5s")
-	viper.SetDefault("metrics_port", 10235)
-	viper.SetDefault("log_level", "info")
-	viper.SetDefault("ports", []PortEntry{
-		{Port: 8080, Name: "web"},
-		{Port: 8081, Name: "api"},
-		{Port: 5432, Name: "postgres"},
-		{Port: 6379, Name: "redis"},
-		{Port: 6378, Name: "redis-cluster"},
-		{Port: 9090, Name: "prometheus"},
-		{Port: 9093, Name: "alertmanager"},
-		{Port: 3000, Name: "grafana"},
-		{Port: 3100, Name: "loki"},
-		{Port: 9009, Name: "mimir"},
-		{Port: 3200, Name: "tempo"},
-		{Port: 22, Name: "ssh"},
-	})
-}
-
-// Reset 清除全域設定（主要用於測試）
-func Reset() {
-	globalSettings = nil
 }
