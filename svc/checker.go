@@ -85,17 +85,15 @@ func NewChecker() *Checker {
 }
 
 func (c *Checker) InitOTel(ctx context.Context) error {
-	u, err := url.Parse(c.Config.MimirEndpoint)
+	u, err := url.Parse(c.Config.MimirURL)
 	if err != nil {
-		return fmt.Errorf("failed to parse mimir endpoint: %w", err)
+		return fmt.Errorf("failed to parse mimir url: %w", err)
 	}
 
 	endpoint := u.Host
 	path := u.Path
 	if path == "" || path == "/" {
 		path = "/otlp/v1/metrics"
-	} else if !strings.HasSuffix(path, "/v1/metrics") && !strings.HasSuffix(path, "/otlp/v1/metrics") {
-		path = strings.TrimSuffix(path, "/") + "/otlp/v1/metrics"
 	}
 
 	opts := []otlpmetrichttp.Option{
