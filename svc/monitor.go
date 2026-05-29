@@ -20,18 +20,16 @@ func RunMonitor(ctx context.Context) error {
 	globalConfig := config.Get()
 	c := NewChecker()
 
-	if globalConfig.MimirEndpoint != "" {
-		if err := c.InitOTel(ctx); err != nil {
-			log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
-		} else {
-			defer func() {
-				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer shutdownCancel()
-				if err := c.ShutdownOTel(shutdownCtx); err != nil {
-					log.Printf("Error shutting down MeterProvider: %v", err)
-				}
-			}()
-		}
+	if err := c.InitOTel(ctx); err != nil {
+		log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
+	} else {
+		defer func() {
+			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer shutdownCancel()
+			if err := c.ShutdownOTel(shutdownCtx); err != nil {
+				log.Printf("Error shutting down MeterProvider: %v", err)
+			}
+		}()
 	}
 
 	go func() {
