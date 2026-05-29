@@ -13,7 +13,7 @@ var defaultJson = `{
   "check_interval": "30s",
   "timeout": "5s",
   "metrics_port": 10235,
-  "mimir_endpoint": "",
+  "mimir_endpoint": "http://localhost:9009",
   "log_level": "info",
   "ports": [
     { "port": 8080, "name": "web" },
