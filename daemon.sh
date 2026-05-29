@@ -9,7 +9,7 @@
 #   ./daemon.sh status  Show daemon status
 #
 # Environment:
-#   MIMIR_ENDPOINT   Override mimir_endpoint in config (e.g., http://localhost:9009)
+#   MIMIR_URL       Override mimir_url in config (e.g., http://localhost:9009/api/v1/push)
 #   METRICS_PORT     Override metrics_port (default: from config)
 #
 
@@ -21,8 +21,8 @@ CONFIG_PATH="${HOME}/.config/port_listenor/settings.json"
 
 # Load MIMIR_ENDPOINT from config if not set
 load_config() {
-    if [ -f "${CONFIG_PATH}" ] && [ -z "${MIMIR_ENDPOINT}" ]; then
-        MIMIR_ENDPOINT=$(grep -o '"mimir_endpoint"[[:space:]]*:[[:space:]]*"[^"]*"' "${CONFIG_PATH}" 2>/dev/null | sed 's/.*"mimir_endpoint"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
+    if [ -f "${CONFIG_PATH}" ] && [ -z "${MIMIR_URL}" ]; then
+        MIMIR_URL=$(grep -o '"mimir_url"[[:space:]]*:[[:space:]]*"[^"]*"' "${CONFIG_PATH}" 2>/dev/null | sed 's/.*"mimir_url"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
     fi
 }
 
@@ -41,9 +41,9 @@ do_start() {
     echo "Starting ${NAME}..."
 
     ARGS="monitor"
-    if [ -n "${MIMIR_ENDPOINT}" ]; then
-        # Note: mimir_endpoint must be set in config file, not via CLI flag currently
-        echo "MIMIR_ENDPOINT=${MIMIR_ENDPOINT} (set in ${CONFIG_PATH})"
+    if [ -n "${MIMIR_URL}" ]; then
+        # Note: mimir_url must be set in config file, not via CLI flag currently
+        echo "MIMIR_URL=${MIMIR_URL} (set in ${CONFIG_PATH})"
     fi
 
     # Note: The current CLI does not support --mimir-endpoint flag directly
