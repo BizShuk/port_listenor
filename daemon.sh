@@ -14,7 +14,7 @@
 #
 
 NAME="port-listener"
-BINARY="./port-checker"
+BINARY="./port_listenor"
 PIDFILE="/tmp/${NAME}.pid"
 LOGFILE="/tmp/${NAME}.log"
 CONFIG_PATH="${HOME}/.config/port_listenor/settings.json"
@@ -40,7 +40,7 @@ do_start() {
 
     echo "Starting ${NAME}..."
 
-    ARGS="monitor port"
+    ARGS="monitor"
     if [ -n "${MIMIR_ENDPOINT}" ]; then
         # Note: mimir_endpoint must be set in config file, not via CLI flag currently
         echo "MIMIR_ENDPOINT=${MIMIR_ENDPOINT} (set in ${CONFIG_PATH})"

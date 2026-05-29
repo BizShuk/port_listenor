@@ -13,7 +13,7 @@ var defaultJson = `{
   "check_interval": "30s",
   "timeout": "5s",
   "metrics_port": 10235,
-  "mimir_endpoint": "http://localhost:9009",
+  "mimir_url": "http://localhost:9009/api/v1/push",
   "log_level": "info",
   "ports": [
     { "port": 8080, "name": "web" },
@@ -41,7 +41,7 @@ type Settings struct {
 	CheckInterval string      `mapstructure:"check_interval"`
 	Timeout       string      `mapstructure:"timeout"`
 	MetricsPort   int         `mapstructure:"metrics_port"`
-	MimirEndpoint string      `mapstructure:"mimir_endpoint"`
+	MimirURL      string      `mapstructure:"mimir_url"`
 	LogLevel      string      `mapstructure:"log_level"`
 	Ports         []PortEntry `mapstructure:"ports"`
 }
