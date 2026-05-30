@@ -19,13 +19,6 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().StringVarP(
-		&cfgFile,
-		"config",
-		"c",
-		config.SETTINGS_PATH,
-		"config file path (default: ~/.config/port_listenor/settings.json)",
-	)
 }
 
 // initConfig 初始化全域設定

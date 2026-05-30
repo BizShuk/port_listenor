@@ -5,15 +5,11 @@ import (
 	"fmt"
 
 	"github.com/bizshuk/gosdk/config"
-	"github.com/bizshuk/gosdk/log"
-	sdkutils "github.com/bizshuk/gosdk/utils"
 	"github.com/spf13/viper"
 )
 
 //go:embed default_settings.json
-var defaultJson string
-
-const SETTINGS_PATH = "~/.config/port_listenor"
+var defaultSettingsJSON string
 
 // 全域設定實例
 var globalSettings *Settings
@@ -37,24 +33,16 @@ type PortEntry struct {
 // Get 返回全域設定單例
 // 首次調用時自動初始化
 func Get() *Settings {
-	log.Info("1")
 	if globalSettings == nil {
-		log.Info("2")
 		if err := Default(); err != nil {
 			panic(fmt.Sprintf("failed to load config: %v", err))
 		}
 	}
-	log.Info("3", globalSettings)
 	return globalSettings
 }
 
 func Default() error {
-	err := sdkutils.CreateIfNotExist(SETTINGS_PATH, defaultJson)
-	if err != nil {
-		return err
-	}
-	config.DefaultWithDir(SETTINGS_PATH)
-
+	config.Default(config.WithAppName("port_listenor"), config.WithDefaultValue(defaultSettingsJSON))
 	// 將 viper 內容解碼到 Settings 結構
 	globalSettings = &Settings{}
 	if err := viper.Unmarshal(globalSettings); err != nil {
