@@ -11,8 +11,8 @@ import (
 //go:embed default_settings.json
 var defaultSettingsJSON string
 
-// 全域設定實例
-var globalSettings *Settings
+// GlobalSettings 全域設定實例
+var GlobalSettings *Settings
 
 // Settings 定義所有設定項目
 type Settings struct {
@@ -30,22 +30,12 @@ type PortEntry struct {
 	Name string `mapstructure:"name" json:"name"`
 }
 
-// Get 返回全域設定單例
-// 首次調用時自動初始化
-func Get() *Settings {
-	if globalSettings == nil {
-		if err := Default(); err != nil {
-			panic(fmt.Sprintf("failed to load config: %v", err))
-		}
-	}
-	return globalSettings
-}
-
+// Default初始化全域設定
 func Default() error {
 	config.Default(config.WithAppName("port_listenor"), config.WithDefaultValue(defaultSettingsJSON))
 	// 將 viper 內容解碼到 Settings 結構
-	globalSettings = &Settings{}
-	if err := viper.Unmarshal(globalSettings); err != nil {
+	GlobalSettings = &Settings{}
+	if err := viper.Unmarshal(GlobalSettings); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 	return nil

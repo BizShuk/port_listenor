@@ -9,7 +9,7 @@ import (
 
 // ResolvePorts 解析傳入的 port 列表，若為空則從設定檔讀取，並回傳 PortEntry 列表、Timeout 期間與錯誤。
 func ResolvePorts(ports []int) ([]config.PortEntry, time.Duration, error) {
-	globalConfig := config.Get()
+	globalConfig := config.GlobalSettings
 	timeout := ParseDuration(globalConfig.Timeout)
 
 	var entries []config.PortEntry
