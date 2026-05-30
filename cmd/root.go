@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
-
 // RootCmd 是CLI的根命令
 var RootCmd = &cobra.Command{
 	Use:   "port",
