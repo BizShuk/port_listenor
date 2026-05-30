@@ -27,7 +27,7 @@ var checkCmd = &cobra.Command{
 				ports = append(ports, port)
 			}
 		}
-		entries, timeout, err := svc.ResolvePorts(ports)
+		entries, timeout, err := ResolvePorts(ports)
 		if err != nil {
 			return err
 		}

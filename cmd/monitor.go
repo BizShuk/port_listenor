@@ -25,7 +25,7 @@ var monitorCmd = &cobra.Command{
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer cancel()
 
-		entries, timeout, err := svc.ResolvePorts(nil)
+		entries, timeout, err := ResolvePorts(nil)
 		if err != nil {
 			return err
 		}

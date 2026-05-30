@@ -16,7 +16,7 @@ var monitorInterval time.Duration = 0
 // RunMonitor 啟動持續監控循環與指標服務
 func RunMonitor(ctx context.Context, entries []config.PortEntry, timeout time.Duration) error {
 	globalConfig := config.Get()
-	monitorInterval = ParseDuration(globalConfig.CheckInterval)
+	monitorInterval = parseDuration(globalConfig.CheckInterval)
 
 	for {
 		select {

@@ -80,14 +80,6 @@ func getProcessInfo(port int) (pid string, processName string) {
 	return "", ""
 }
 
-func ParseDuration(s string) time.Duration {
-	d, err := time.ParseDuration(s)
-	if err != nil {
-		return 5 * time.Second
-	}
-	return d
-}
-
 // CheckPorts 併發檢查多個連接埠，並依連接埠號碼排序回傳結果
 func CheckPorts(entries []config.PortEntry, timeout time.Duration) []config.PortStatus {
 	var results []config.PortStatus
@@ -113,26 +105,10 @@ func CheckPorts(entries []config.PortEntry, timeout time.Duration) []config.Port
 	return results
 }
 
-// ResolvePorts 解析傳入的 port 列表，若為空則從設定檔讀取，並回傳 PortEntry 列表、Timeout 期間與錯誤。
-func ResolvePorts(ports []int) ([]config.PortEntry, time.Duration, error) {
-	globalConfig := config.Get()
-	timeout := ParseDuration(globalConfig.Timeout)
-
-	var entries []config.PortEntry
-	if len(ports) > 0 {
-		for _, port := range ports {
-			entries = append(entries, config.PortEntry{
-				Port: port,
-				Name: fmt.Sprintf("port-%d", port),
-			})
-		}
-	} else {
-		entries = globalConfig.Ports
+func parseDuration(s string) time.Duration {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return 5 * time.Second
 	}
-
-	if len(entries) == 0 {
-		return nil, 0, fmt.Errorf("no ports specified in config or arguments")
-	}
-
-	return entries, timeout, nil
+	return d
 }
