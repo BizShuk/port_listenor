@@ -1,6 +1,7 @@
 package config
 
 import (
+	_ "embed"
 	"fmt"
 
 	"github.com/bizshuk/gosdk/config"
@@ -9,27 +10,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-var defaultJson = `{
-  "check_interval": "30s",
-  "timeout": "5s",
-  "metrics_port": 10235,
-  "mimir_url": "http://localhost:9009/api/v1/push",
-  "log_level": "info",
-  "ports": [
-    { "port": 8080, "name": "web" },
-    { "port": 8081, "name": "api" },
-    { "port": 5432, "name": "postgres" },
-    { "port": 6379, "name": "redis" },
-    { "port": 6378, "name": "redis-cluster" },
-    { "port": 9090, "name": "prometheus" },
-    { "port": 9093, "name": "alertmanager" },
-    { "port": 3000, "name": "grafana" },
-    { "port": 3100, "name": "loki" },
-    { "port": 9009, "name": "mimir" },
-    { "port": 3200, "name": "tempo" },
-    { "port": 22, "name": "ssh" }
-  ]
-}`
+//go:embed default_settings.json
+var defaultJson string
 
 const SETTINGS_PATH = "~/.config/port_listenor"
 
@@ -71,7 +53,6 @@ func Default() error {
 	if err != nil {
 		return err
 	}
-	log.Info("4")
 	config.DefaultWithDir(SETTINGS_PATH)
 
 	// 將 viper 內容解碼到 Settings 結構

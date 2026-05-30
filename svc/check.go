@@ -44,7 +44,6 @@ func RunOneTimeCheck() error {
 
 	timeout := ParseDuration(globalConfig.Timeout)
 
-	c := NewChecker()
 	var results []PortStatus
 	var resultsLock sync.Mutex
 	var wg sync.WaitGroup
@@ -53,7 +52,7 @@ func RunOneTimeCheck() error {
 		wg.Add(1)
 		go func(e config.PortEntry) {
 			defer wg.Done()
-			status := c.CheckPortWithProcess(e, timeout)
+			status := CheckPortWithProcess(e, timeout)
 			resultsLock.Lock()
 			results = append(results, status)
 			resultsLock.Unlock()
@@ -77,7 +76,6 @@ func RunOneTimeCheckWithPorts(ports []int) error {
 	globalConfig := config.Get()
 	timeout := ParseDuration(globalConfig.Timeout)
 
-	c := NewChecker()
 	var results []PortStatus
 	var resultsLock sync.Mutex
 	var wg sync.WaitGroup
@@ -87,7 +85,7 @@ func RunOneTimeCheckWithPorts(ports []int) error {
 		go func(p int) {
 			defer wg.Done()
 			entry := config.PortEntry{Port: port, Name: fmt.Sprintf("port-%d", port)}
-			status := c.CheckPortWithProcess(entry, timeout)
+			status := CheckPortWithProcess(entry, timeout)
 			resultsLock.Lock()
 			results = append(results, status)
 			resultsLock.Unlock()

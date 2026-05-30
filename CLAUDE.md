@@ -12,6 +12,7 @@
 ├── docs/               # Documentation
 ├── plans/              # Implementation plans
 ├── go.mod
+├── run.sh              # Setup and execution helper script
 └── main.go             # Program entry point
 ```
 
@@ -50,17 +51,17 @@ go mod download
 ### 建置 (Build)
 
 ```bash
-go build -o port-checker .
+go build -o port_listenor .
 ```
 
 ### 執行 (Run)
 
 ```bash
 # 執行單次檢查
-go run . port check
+go run . check
 
 # 執行持續監控
-go run . monitor port
+go run . monitor
 ```
 
 ### 測試 (Test)

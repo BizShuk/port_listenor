@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"sort"
 	"sync"
@@ -12,34 +11,23 @@ import (
 	"time"
 
 	"github.com/bizshuk/port_listenor/config"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // RunMonitor 啟動持續監控循環與指標服務
 func RunMonitor(ctx context.Context) error {
 	globalConfig := config.Get()
-	c := NewChecker()
 
-	if err := c.InitOTel(ctx); err != nil {
+	if err := InitMeterProvider(ctx, globalConfig.MimirURL); err != nil {
 		log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
 	} else {
 		defer func() {
 			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer shutdownCancel()
-			if err := c.ShutdownOTel(shutdownCtx); err != nil {
+			if err := ShutdownOTel(shutdownCtx); err != nil {
 				log.Printf("Error shutting down MeterProvider: %v", err)
 			}
 		}()
 	}
-
-	go func() {
-		http.Handle("/metrics", promhttp.HandlerFor(c.Registry, promhttp.HandlerOpts{}))
-		addr := fmt.Sprintf(":%d", globalConfig.MetricsPort)
-		log.Printf("Starting prometheus metrics server on %s", addr)
-		if err := http.ListenAndServe(addr, nil); err != nil {
-			log.Printf("Failed to start metrics server: %v", err)
-		}
-	}()
 
 	timeout := ParseDuration(globalConfig.Timeout)
 	interval := ParseDuration(globalConfig.CheckInterval)
@@ -60,8 +48,7 @@ func RunMonitor(ctx context.Context) error {
 			wg.Add(1)
 			go func(e config.PortEntry) {
 				defer wg.Done()
-				status := c.CheckPortWithProcess(e, timeout)
-				c.UpdateMetrics(status)
+				status := CheckPortWithProcess(e, timeout)
 
 				currentLock.Lock()
 				currentStatuses = append(currentStatuses, status)
@@ -75,9 +62,7 @@ func RunMonitor(ctx context.Context) error {
 			return currentStatuses[i].Port < currentStatuses[j].Port
 		})
 
-		c.StatusLock.Lock()
-		c.LatestStatuses = currentStatuses
-		c.StatusLock.Unlock()
+		UpdateStatuses(ctx, currentStatuses)
 
 		RenderDashboard(currentStatuses, interval)
 

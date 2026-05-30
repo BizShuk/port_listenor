@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# daemon.sh — Run port-listenor monitor as a daemon
+# daemon.sh — Run port_listenor monitor as a daemon
 #
 # Usage:
 #   ./daemon.sh start   Start the daemon
@@ -9,11 +9,11 @@
 #   ./daemon.sh status  Show daemon status
 #
 # Environment:
-#   MIMIR_URL       Override mimir_url in config (e.g., http://localhost:9009/api/v1/push)
-#   METRICS_PORT     Override metrics_port (default: from config)
+#   MIMIR_URL       Override mimir_url in config (e.g., http://localhost:9009/otlp/v1/metrics)
+#   MIMIR_PORT      Override metrics_port (default: from config)
 #
 
-NAME="port-listener"
+NAME="port_listenor"
 BINARY="./port_listenor"
 PIDFILE="/tmp/${NAME}.pid"
 LOGFILE="/tmp/${NAME}.log"
