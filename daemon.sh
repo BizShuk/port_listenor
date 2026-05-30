@@ -19,7 +19,7 @@ PIDFILE="/tmp/${NAME}.pid"
 LOGFILE="/tmp/${NAME}.log"
 CONFIG_PATH="${HOME}/.config/port_listenor/settings.json"
 
-# Load MIMIR_ENDPOINT from config if not set
+# Load MIMIR_URL from config if not set
 load_config() {
     if [ -f "${CONFIG_PATH}" ] && [ -z "${MIMIR_URL}" ]; then
         MIMIR_URL=$(grep -o '"mimir_url"[[:space:]]*:[[:space:]]*"[^"]*"' "${CONFIG_PATH}" 2>/dev/null | sed 's/.*"mimir_url"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')
