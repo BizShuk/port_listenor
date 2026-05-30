@@ -16,20 +16,22 @@ var checkCmd = &cobra.Command{
 	Short: "Run a one-time port status check",
 	Long:  `Check defined ports once and print the results immediately to the console.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if checkPorts == "" {
-			return svc.RunOneTimeCheck()
-		}
-
 		var ports []int
-		for _, p := range strings.Split(checkPorts, ",") {
-			p = strings.TrimSpace(p)
-			port, err := strconv.Atoi(p)
-			if err != nil {
-				return fmt.Errorf("invalid port: %s", p)
+		if checkPorts != "" {
+			for _, p := range strings.Split(checkPorts, ",") {
+				p = strings.TrimSpace(p)
+				port, err := strconv.Atoi(p)
+				if err != nil {
+					return fmt.Errorf("invalid port: %s", p)
+				}
+				ports = append(ports, port)
 			}
-			ports = append(ports, port)
 		}
-		return svc.RunOneTimeCheckWithPorts(ports)
+		entries, timeout, err := svc.ResolvePorts(ports)
+		if err != nil {
+			return err
+		}
+		return svc.RunOneTimeCheck(cmd.Context(), entries, timeout)
 	},
 }
 

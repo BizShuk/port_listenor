@@ -8,9 +8,9 @@ Send port listening metrics (including closed ports) to Mimir via OpenTelemetry,
 
 ### New Metrics
 
-| Metric Name | Type | Labels | Description |
-|-------------|------|--------|-------------|
-| `net_host_port` | Gauge | `host`, `port` | 1 = port open, 0 = port closed |
+| Metric Name                | Type  | Labels         | Description                        |
+| -------------------------- | ----- | -------------- | ---------------------------------- |
+| `net_host_port`            | Gauge | `host`, `port` | 1 = port open, 0 = port closed     |
 | `net_host_port_latency_ms` | Gauge | `host`, `port` | Port check latency in milliseconds |
 
 ### Label Standardization
@@ -22,6 +22,7 @@ Send port listening metrics (including closed ports) to Mimir via OpenTelemetry,
 ### Replacement
 
 These two new metrics **replace** the existing Prometheus-only metrics:
+
 - `port_check_status`
 - `port_check_latency_ms`
 - `port_check_process_info`
@@ -31,16 +32,16 @@ These two new metrics **replace** the existing Prometheus-only metrics:
 ### `svc/checker.go`
 
 1. **`NewChecker()`** — Register new metric names:
-   - `net_host_port` GaugeVec with labels `{host, port}`
-   - `net_host_port_latency_ms` GaugeVec with labels `{host, port}`
+    - `net_host_port` GaugeVec with labels `{host, port}`
+    - `net_host_port_latency_ms` GaugeVec with labels `{host, port}`
 
 2. **`UpdateMetrics(status PortStatus)`** — Use simplified labels:
-   - `net_host_port{host, port}` → set 1.0 or 0.0
-   - `net_host_port_latency_ms{host, port}` → set latency value
+    - `net_host_port{host, port}` → set 1.0 or 0.0
+    - `net_host_port_latency_ms{host, port}` → set latency value
 
 3. **`registerOTelMetrics(meter metric.Meter)`** — Update OTel callbacks:
-   - Observable gauge `net_host_port` with `{host, port}` attributes
-   - Observable gauge `net_host_port_latency_ms` with `{host, port}` attributes
+    - Observable gauge `net_host_port` with `{host, port}` attributes
+    - Observable gauge `net_host_port_latency_ms` with `{host, port}` attributes
 
 ## 4. Dashboard Design
 
@@ -51,11 +52,13 @@ These two new metrics **replace** the existing Prometheus-only metrics:
 ### Panels
 
 #### Panel 1: Host Overview (Stat)
+
 - **Type**: Stat
 - **Repeat**: Horizontal by host
 - **Display**: Host name / IP
 
 #### Panel 2: Port Status Table (Table)
+
 - **Type**: Table
 - **Repeat**: Horizontal by host
 - **Columns**: Port | Status | Latency (ms)
@@ -68,7 +71,7 @@ No configuration changes required. The existing `config.PortEntry` structure is 
 
 ## 6. Files Summary
 
-| File | Action |
-|------|--------|
-| `svc/checker.go` | Modify — update metric names and labels |
-| `docs/dashboard.json` | Create — Grafana dashboard JSON |
+| File                  | Action                                  |
+| --------------------- | --------------------------------------- |
+| `svc/checker.go`      | Modify — update metric names and labels |
+| `docs/dashboard.json` | Create — Grafana dashboard JSON         |

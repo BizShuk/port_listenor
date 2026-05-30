@@ -3,84 +3,54 @@ package svc
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
-	"sort"
-	"sync"
 	"text/tabwriter"
 	"time"
 
 	"github.com/bizshuk/port_listenor/config"
 )
 
+// monitorInterval 套件級變數，記錄監控間隔時間（預設為 0）
+var monitorInterval time.Duration = 0
+
 // RunMonitor 啟動持續監控循環與指標服務
-func RunMonitor(ctx context.Context) error {
+func RunMonitor(ctx context.Context, entries []config.PortEntry, timeout time.Duration) error {
 	globalConfig := config.Get()
-
-	if err := InitMeterProvider(ctx, globalConfig.MimirURL); err != nil {
-		log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
-	} else {
-		defer func() {
-			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer shutdownCancel()
-			if err := ShutdownOTel(shutdownCtx); err != nil {
-				log.Printf("Error shutting down MeterProvider: %v", err)
-			}
-		}()
-	}
-
-	timeout := ParseDuration(globalConfig.Timeout)
-	interval := ParseDuration(globalConfig.CheckInterval)
-	var wg sync.WaitGroup
+	monitorInterval = ParseDuration(globalConfig.CheckInterval)
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Received shutdown signal, shutting down gracefully...")
 			return nil
 		default:
 		}
 
-		var currentStatuses []PortStatus
-		var currentLock sync.Mutex
-
-		for _, entry := range globalConfig.Ports {
-			wg.Add(1)
-			go func(e config.PortEntry) {
-				defer wg.Done()
-				status := CheckPortWithProcess(e, timeout)
-
-				currentLock.Lock()
-				currentStatuses = append(currentStatuses, status)
-				currentLock.Unlock()
-			}(entry)
+		if err := RunOneTimeCheck(ctx, entries, timeout); err != nil {
+			return err
 		}
 
-		wg.Wait()
-
-		sort.Slice(currentStatuses, func(i, j int) bool {
-			return currentStatuses[i].Port < currentStatuses[j].Port
-		})
-
-		UpdateStatuses(ctx, currentStatuses)
-
-		RenderDashboard(currentStatuses, interval)
-
 		select {
-		case <-time.After(interval):
+		case <-time.After(monitorInterval):
 		case <-ctx.Done():
-			log.Println("Received shutdown signal, shutting down gracefully...")
 			return nil
 		}
 	}
 }
 
+// RunOneTimeCheck 執行單次檢查邏輯，印出表格結果。
+func RunOneTimeCheck(ctx context.Context, entries []config.PortEntry, timeout time.Duration) error {
+	results := CheckPorts(entries, timeout)
+	config.UpdateStatuses(ctx, results)
+	RenderDashboard(results)
+	return nil
+}
+
 // RenderDashboard 渲染儀表板
-func RenderDashboard(statuses []PortStatus, interval time.Duration) {
+func RenderDashboard(statuses []config.PortStatus) {
 	fmt.Print("\033[H\033[2J")
 	fmt.Println("================================================================================")
 	fmt.Printf(" PORT HEALTH CHECKER - Last Update: %s (Interval: %v)\n",
-		time.Now().Format("2006-01-02 15:04:05"), interval)
+		time.Now().Format("2006-01-02 15:04:05"), monitorInterval)
 	fmt.Println("================================================================================")
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 3, ' ', 0)
@@ -91,25 +61,22 @@ func RenderDashboard(statuses []PortStatus, interval time.Duration) {
 		if s.IsOpen {
 			statusStr = "\033[32mOPEN\033[0m"
 		}
-
 		latencyStr := "-"
 		if s.IsOpen {
 			latencyStr = fmt.Sprintf("%.2fms", s.LatencyMs)
 		}
-
 		pidStr := "-"
 		if s.IsOpen && s.PID != "" {
 			pidStr = s.PID
 		}
-
 		procStr := "-"
 		if s.IsOpen && s.ProcessName != "" {
 			procStr = s.ProcessName
 		}
-
 		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\t%s\n",
 			s.Port, s.Service, statusStr, latencyStr, pidStr, procStr)
 	}
+
 	w.Flush()
 	fmt.Println("================================================================================")
 }

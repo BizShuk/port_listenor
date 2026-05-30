@@ -1,23 +1,30 @@
-package svc
+package config
 
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
+	gosdkmetric "github.com/bizshuk/gosdk/metric"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/metric"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/resource"
 )
 
-var (
-	metricMu         sync.Mutex
-	providerInstance *sdkmetric.MeterProvider
+// PortStatus 代表連接埠檢查的結果狀態
+type PortStatus struct {
+	Host          string
+	Port          int
+	Service       string
+	Domain        string
+	IsOpen        bool
+	LatencyMs     float64
+	PID           string
+	ProcessName   string
+	LastCheckTime time.Time
+}
 
+var (
 	// Cached meter instruments (created in init)
 	statusGauge  metric.Float64Gauge
 	latencyGauge metric.Float64Gauge
@@ -43,52 +50,8 @@ func init() {
 	if initErr != nil {
 		panic(fmt.Errorf("failed to create latency gauge in init: %w", initErr))
 	}
-}
 
-// InitMeterProvider initializes the SDK MeterProvider, registers it globally, and caches it.
-func InitMeterProvider(ctx context.Context, mimirURL string) error {
-	metricMu.Lock()
-	defer metricMu.Unlock()
-
-	if providerInstance != nil {
-		return nil
-	}
-
-	var opts []otlpmetrichttp.Option
-	if mimirURL != "" {
-		opts = append(opts, otlpmetrichttp.WithEndpointURL(mimirURL))
-	}
-
-	exporter, err := otlpmetrichttp.New(ctx, opts...)
-	if err != nil {
-		return fmt.Errorf("failed to create OTLP metric exporter: %w", err)
-	}
-
-	res, err := resource.New(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create resource: %w", err)
-	}
-
-	provider := sdkmetric.NewMeterProvider(
-		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exporter, sdkmetric.WithInterval(10*time.Second))),
-		sdkmetric.WithResource(res),
-	)
-
-	otel.SetMeterProvider(provider)
-	providerInstance = provider
-
-	return nil
-}
-
-// ShutdownOTel shuts down the global meter provider.
-func ShutdownOTel(ctx context.Context) error {
-	metricMu.Lock()
-	defer metricMu.Unlock()
-
-	if providerInstance != nil {
-		return providerInstance.Shutdown(ctx)
-	}
-	return nil
+	gosdkmetric.InitMeterProvider(context.Background())
 }
 
 // UpdateStatuses records the latest port statuses to OpenTelemetry metrics.
