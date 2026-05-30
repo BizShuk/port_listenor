@@ -1,0 +1,435 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 16,
+            "panels": [],
+            "title": "Row title",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "default": true,
+                "type": "prometheus",
+                "uid": "mimir"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "fieldMinMax": false,
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "dark-red",
+                                    "index": 0,
+                                    "text": "Close"
+                                },
+                                "1": {
+                                    "color": "blue",
+                                    "index": 1,
+                                    "text": "Open"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 2,
+                "x": 0,
+                "y": 1
+            },
+            "id": 4,
+            "maxPerRow": 12,
+            "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "sizing": "auto"
+            },
+            "pluginVersion": "11.2.0",
+            "repeat": "service",
+            "repeatDirection": "h",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "mimir"
+                    },
+                    "disableTextWrap": false,
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "max by (service, port)(port_check_status{service=~\"$service\"})",
+                    "format": "table",
+                    "fullMetaSearch": false,
+                    "includeNullMetadata": true,
+                    "instant": true,
+                    "legendFormat": "{{label_name}}",
+                    "range": false,
+                    "refId": "A",
+                    "useBackend": false
+                }
+            ],
+            "title": "$service",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "__name__": true,
+                            "host": true,
+                            "pid": true,
+                            "process_name": true
+                        },
+                        "includeByName": {},
+                        "indexByName": {},
+                        "renameByName": {
+                            "Value": "status"
+                        }
+                    }
+                }
+            ],
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "default": true,
+                "type": "prometheus",
+                "uid": "mimir"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "ms",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 0,
+                "y": 5
+            },
+            "id": 2,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "mimir"
+                    },
+                    "editorMode": "code",
+                    "expr": "max by (service, port) (port_check_latency_ms)",
+                    "format": "time_series",
+                    "interval": "",
+                    "legendFormat": "{{service}} (port {{port}})",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Port Latency (ms)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "default": true,
+                "type": "prometheus",
+                "uid": "mimir"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
+                        "filterable": false,
+                        "inspect": false
+                    },
+                    "fieldMinMax": false,
+                    "mappings": [
+                        {
+                            "options": {
+                                "0": {
+                                    "color": "dark-blue",
+                                    "index": 0,
+                                    "text": "Closed"
+                                },
+                                "1": {
+                                    "color": "dark-red",
+                                    "index": 1,
+                                    "text": "Opened"
+                                }
+                            },
+                            "type": "value"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 12,
+                "y": 5
+            },
+            "id": 3,
+            "options": {
+                "cellHeight": "sm",
+                "footer": {
+                    "countRows": false,
+                    "enablePagination": false,
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": false
+            },
+            "pluginVersion": "11.2.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "mimir"
+                    },
+                    "disableTextWrap": false,
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "max by (service, port)(port_check_status)",
+                    "format": "table",
+                    "fullMetaSearch": false,
+                    "includeNullMetadata": true,
+                    "instant": true,
+                    "legendFormat": "{{label_name}}",
+                    "range": false,
+                    "refId": "A",
+                    "useBackend": false
+                }
+            ],
+            "title": "port status",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "__name__": true,
+                            "host": true,
+                            "pid": true,
+                            "process_name": true
+                        },
+                        "includeByName": {},
+                        "indexByName": {},
+                        "renameByName": {
+                            "Value": "status"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 39,
+    "tags": [
+        "port-checker",
+        "monitoring"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": true,
+                    "text": [
+                        "alertmanager",
+                        "api",
+                        "grafana",
+                        "loki",
+                        "mimir",
+                        "postgres",
+                        "prometheus",
+                        "redis",
+                        "redis-cluster",
+                        "ssh",
+                        "tempo",
+                        "web"
+                    ],
+                    "value": [
+                        "alertmanager",
+                        "api",
+                        "grafana",
+                        "loki",
+                        "mimir",
+                        "postgres",
+                        "prometheus",
+                        "redis",
+                        "redis-cluster",
+                        "ssh",
+                        "tempo",
+                        "web"
+                    ]
+                },
+                "definition": "label_values(port_check_status,service)",
+                "hide": 0,
+                "includeAll": true,
+                "multi": true,
+                "name": "service",
+                "options": [],
+                "query": {
+                    "qryType": 1,
+                    "query": "label_values(port_check_status,service)",
+                    "refId": "PrometheusVariableQueryEditor-VariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-30m",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Port Health Checker",
+    "uid": "port-health-checker",
+    "version": 1,
+    "weekStart": ""
+}
