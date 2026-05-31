@@ -1,7 +1,6 @@
 {
   "check_interval": "30s",
   "timeout": "5s",
-  "metrics_port": 9009,
   "mimir_url": "http://localhost:9009/otlp/v1/metrics",
   "log_level": "info",
   "ports": [

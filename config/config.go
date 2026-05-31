@@ -18,7 +18,6 @@ var GlobalSettings *Settings
 type Settings struct {
 	CheckInterval string      `mapstructure:"check_interval"`
 	Timeout       string      `mapstructure:"timeout"`
-	MetricsPort   int         `mapstructure:"metrics_port"`
 	MimirURL      string      `mapstructure:"mimir_url"`
 	LogLevel      string      `mapstructure:"log_level"`
 	Ports         []PortEntry `mapstructure:"ports"`
@@ -32,8 +31,12 @@ type PortEntry struct {
 
 // Default初始化全域設定
 func Default() error {
-	config.Default(config.WithAppName("port_listenor"), config.WithDefaultValue(defaultSettingsJSON))
-	// 將 viper 內容解碼到 Settings 結構
+	config.Default(
+		config.WithAppName("port_listenor"), 
+		config.WithDefaultValue(defaultSettingsJSON)
+	)
+
+
 	GlobalSettings = &Settings{}
 	if err := viper.Unmarshal(GlobalSettings); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
