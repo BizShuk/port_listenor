@@ -52,6 +52,14 @@
     {
       "port": 22,
       "name": "ssh"
+    },
+    {
+      "port": 11434,
+      "name": "ollama"
+    },
+    {
+      "port": 3113,
+      "name": "agentmemory"
     }
   ]
 }
